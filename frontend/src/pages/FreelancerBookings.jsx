@@ -8,16 +8,47 @@ export default function FreelancerBookings() {
   const [busyId, setBusyId] = useState(null);
   const [message, setMessage] = useState("");
 
-  async function loadBookings() {
-    setLoading(true); setError("");
+async function loadBookings() {
+  setLoading(true);
+  setError("");
+
+  try {
+    const data = await apiRequest("/bookings/freelancer");
+    setBookings(data.bookings || []);
+  } catch (err) {
+    setError(err.message || "Unable to load bookings.");
+  } finally {
+    setLoading(false);
+  }
+}
+
+useEffect(() => {
+  let ignore = false;
+
+  async function fetchBookings() {
     try {
       const data = await apiRequest("/bookings/freelancer");
-      setBookings(data.bookings || []);
-    } catch (err) { setError(err.message || "Unable to load bookings."); }
-    finally { setLoading(false); }
+
+      if (!ignore) {
+        setBookings(data.bookings || []);
+      }
+    } catch (err) {
+      if (!ignore) {
+        setError(err.message || "Unable to load bookings.");
+      }
+    } finally {
+      if (!ignore) {
+        setLoading(false);
+      }
+    }
   }
 
-  useEffect(() => { loadBookings(); }, []);
+  fetchBookings();
+
+  return () => {
+    ignore = true;
+  };
+}, []);
 
   async function completeBooking(id) {
     setBusyId(id); setError(""); setMessage("");

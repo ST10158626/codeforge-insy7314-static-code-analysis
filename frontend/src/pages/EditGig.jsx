@@ -20,6 +20,9 @@ function EditGig() {
     const [error, setError] = useState("");
     const [fieldErrors, setFieldErrors] = useState({});
 
+useEffect(() => {
+    let ignore = false;
+
     async function loadGig() {
         try {
             setLoading(true);
@@ -29,31 +32,42 @@ function EditGig() {
             const gig = data.gig;
 
             if (!gig) {
-                setError("Gig could not be found.");
+                if (!ignore) {
+                    setError("Gig could not be found.");
+                }
                 return;
             }
 
-            setFormData({
-                title: gig.title || "",
-                description: gig.description || "",
-                category: gig.category || "",
-                price: gig.price ?? "",
-                deliveryDays: gig.deliveryDays ?? ""
-            });
+            if (!ignore) {
+                setFormData({
+                    title: gig.title || "",
+                    description: gig.description || "",
+                    category: gig.category || "",
+                    price: gig.price ?? "",
+                    deliveryDays: gig.deliveryDays ?? ""
+                });
+            }
         } catch (err) {
             console.error("Failed to load gig:", err);
 
-            setError(
-                err.message ||
-                "Unable to load this gig."
-            );
+            if (!ignore) {
+                setError(
+                    err.message ||
+                    "Unable to load this gig."
+                );
+            }
         } finally {
-            setLoading(false);
+            if (!ignore) {
+                setLoading(false);
+            }
         }
     }
 
-    useEffect(() => {
-        loadGig();
+    loadGig();
+
+    return () => {
+        ignore = true;
+    };
     }, [id]);
 
     function handleChange(event) {

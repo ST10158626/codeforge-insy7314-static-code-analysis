@@ -61,11 +61,35 @@ function MyBookings() {
     /*
      * Load bookings when the page first opens.
      */
-    useEffect(() => {
+useEffect(() => {
+    let ignore = false;
 
-        loadBookings();
+    async function fetchBookings() {
+        try {
+            const data = await apiRequest("/bookings/my");
 
-    }, []);
+            if (!ignore) {
+                setBookings(data.bookings || []);
+            }
+        } catch (err) {
+            console.error("Failed to load bookings:", err);
+
+            if (!ignore) {
+                setError(err.message || "Unable to load bookings.");
+            }
+        } finally {
+            if (!ignore) {
+                setLoading(false);
+            }
+        }
+    }
+
+    fetchBookings();
+
+    return () => {
+        ignore = true;
+    };
+}, []);
 
 
     /*

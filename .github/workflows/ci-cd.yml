@@ -1,0 +1,94 @@
+name: HustleHub+ CI/CD Pipeline
+
+# Automatically execute the pipeline when code is pushed
+# or when a pull request is created or updated.
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+# Backend and frontend jobs can execute independently.
+jobs:
+
+  # ==========================================
+  # BACKEND JOB
+  # ==========================================
+  backend:
+    name: Backend Tests and Build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Retrieve repository source code.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Configure Node.js.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      # Install backend dependencies.
+      - name: Install backend dependencies
+        working-directory: api
+        run: npm ci
+
+      # Execute backend automated tests.
+      - name: Run backend tests
+        working-directory: api
+        env:
+          JWT_SECRET: test-only-secret-for-hustlehub
+        run: npm test
+
+      # Validate backend JavaScript syntax.
+      - name: Build backend
+        working-directory: api
+        run: npm run build
+
+  # ==========================================
+  # FRONTEND JOB
+  # ==========================================
+  frontend:
+    name: Frontend Tests and Build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Retrieve repository source code.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Configure Node.js.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Install frontend dependencies.
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Execute frontend automated tests.
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+
+      # Check frontend code quality.
+      - name: Run frontend linting
+        working-directory: frontend
+        run: npm run lint
+
+      # Build frontend application.
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
