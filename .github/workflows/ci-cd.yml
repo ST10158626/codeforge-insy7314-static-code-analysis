@@ -92,3 +92,29 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+  # ==========================================
+  # SONARQUBE
+  # ==========================================
+  sonarqube:
+    name: SonarQube Static Code Analysis
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    needs:
+      - backend
+      - frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
