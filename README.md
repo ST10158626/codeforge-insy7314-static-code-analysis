@@ -380,6 +380,19 @@ This folder contains the existing React/Vite frontend and Node/Express/Mongoose 
 - The rate limiter is in-memory and suitable for local coursework/single-process development; use a shared store for multi-instance production deployments.
 
 
+# HustleHub+ — (Part 3 - POE)
+
+## Static Code Analysis
+Due to GitHub organization restrictions, forking the original Classroom repository to a personal GitHub account was not permitted. Additionally, the original repository could not be connected directly to SonarQube Cloud because of organization-level permission restrictions. As a result, a separate personal repository was created to facilitate the integration of SonarQube Cloud and the execution of static code analysis through GitHub Actions. The personal repository contains the project's code, relevant commit history, and the SonarQube-integrated CI/CD pipeline. It is used to execute static code analysis and provide access to the corresponding analysis results.
+
+**Personal Repository for Static Code Analysis:** https://github.com/ST10158626/codeforge-insy7314-static-code-analysis.git
+
+### Forking Restriction
+![alt text](documentation-images/forking-restriction.png)
+
+### SonarQube Integration Restriction
+![alt text](documentation-images/sonarqube-installation-restriction.png)
+
 
 # References
 
