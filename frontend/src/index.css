@@ -2162,3 +2162,46 @@
     .nav-link { padding: 7px 8px; font-size: 13px; }
     .navbar-user { display: none; }
 }
+
+
+/* Freelancer income and estimated-tax dashboard */
+.income-page { padding-bottom: 3rem; }
+.income-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+  margin: 1.5rem 0;
+}
+.income-stat-card, .income-visual-card {
+  background: var(--card-background, #fff);
+  border: 1px solid rgba(20, 30, 50, .10);
+  border-radius: 16px;
+  padding: 1.35rem;
+  box-shadow: 0 8px 24px rgba(20, 30, 50, .05);
+}
+.income-stat-card { display: flex; flex-direction: column; gap: .55rem; }
+.income-stat-card span { color: #64748b; font-size: .92rem; }
+.income-stat-card strong { font-size: clamp(1.35rem, 3vw, 2rem); color: #172033; }
+.income-stat-card small { color: #64748b; }
+.income-tax { border-top: 4px solid #e6a23c; }
+.income-net { border-top: 4px solid #239b75; }
+.income-gross { border-top: 4px solid #4778d5; }
+.income-visual-card { margin: 1.25rem 0; }
+.income-section-heading, .income-bar-label {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+}
+.income-section-heading h2 { margin: .2rem 0 1.2rem; }
+.income-period-tag { color: #64748b; font-size: .85rem; }
+.income-bar-row { margin: 1.25rem 0; }
+.income-bar-label { margin-bottom: .5rem; color: #334155; }
+.income-bar-track { width: 100%; height: 13px; background: #edf1f6; border-radius: 99px; overflow: hidden; }
+.income-bar-fill { height: 100%; border-radius: inherit; transition: width .3s ease; }
+.tax-fill { background: #e6a23c; }
+.net-fill { background: #239b75; }
+.income-tax-explanation { margin-top: 1.6rem; line-height: 1.65; color: #334155; }
+.income-disclaimer { padding: .85rem 1rem; background: #fff8e8; border-left: 4px solid #e6a23c; border-radius: 6px; color: #77551c; line-height: 1.5; }
+.income-history-section { margin-top: 2rem; }
+@media (max-width: 760px) {
+  .income-summary-grid { grid-template-columns: 1fr; }
+  .income-section-heading { align-items: flex-start; flex-direction: column; }
+}

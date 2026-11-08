@@ -38,7 +38,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             enum: ["client", "freelancer"],
             default: "client"
-        }
+        },
+        // Security control: temporarily lock accounts after repeated failed logins.
+        failedLoginAttempts: { type: Number, default: 0, select: false },
+        lockUntil: { type: Date, default: null, select: false }
     },
     {
         timestamps: true

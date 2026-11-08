@@ -393,6 +393,50 @@ Due to GitHub organization restrictions, forking the original Classroom reposito
 ### SonarQube Integration Restriction
 ![alt text](documentation-images/sonarqube-installation-restriction.png)
 
+## Freelancer Income and Tax Estimation
+
+The freelancer income page (`/freelancer/income`) displays the value of completed, non-cancelled simulated transactions. It provides three summary figures: gross income, estimated tax reserve and estimated after-tax income, together with proportional bars and transaction history.
+
+### Tax estimation logic
+
+The API calculates the estimate as follows:
+
+1. Retrieve completed transactions belonging to the authenticated freelancer.
+2. Exclude transactions linked to bookings that have been cancelled.
+3. Add the remaining transaction amounts to calculate gross generated income.
+4. Multiply gross income by the configured `TAX_ESTIMATE_RATE` (default `0.15`, or 15%).
+5. Subtract estimated tax from gross income to show estimated after-tax income.
+
+**Formula:** `estimatedTax = grossIncome × taxRate`; `afterTaxIncome = grossIncome − estimatedTax`.
+
+For example, if eligible completed gigs generate R10,000 and the estimate rate is 15%, estimated tax is R1,500 and estimated after-tax income is R8,500. The API response includes `taxRate`, `estimatedTax`, `afterTaxIncome` and `taxMethod` alongside the income total.
+
+To change the planning rate, add `TAX_ESTIMATE_RATE=0.15` to `api/.env`. Use a decimal between 0 and 1 (for example, `0.18` means 18%). This flat-rate estimate is deliberately presented as an illustrative reserve, not an official SARS tax calculation or tax advice. Real tax depends on an individual's taxable income, deductions, rebates and the tax rules for the relevant year. The rate is configurable so the demonstration assumption is transparent and can be changed without editing source code.
+
+## Application Logging and Monitoring
+
+The API writes structured, one-event-per-line JSON logs to `api/logs/application.log`. The log directory is created automatically. The following events are recorded:
+
+| Event | Information captured | Why it matters |
+|---|---|---|
+| Login success | User ID, role, IP address and timestamp | Confirms successful account access and supports account activity reviews. |
+| Login failure / blocked login | User ID when known, IP address, failed-attempt count and reason | Helps identify password guessing and suspicious access attempts. |
+| Booking created, completed or cancelled | Booking ID, relevant user ID and event timestamp | Provides an audit trail for marketplace activity and disputes. |
+| Transaction created | Transaction ID, booking ID, amount, status and type | Helps trace simulated payment records and reconcile booking activity. |
+| API request | HTTP method, endpoint, response status, duration and IP address | Helps monitor usage, identify failing endpoints and investigate unusual traffic. |
+| API error | Endpoint, status code, error type/message, user ID when available and IP address | Helps developers diagnose faults and identify repeated or suspicious errors. |
+
+Passwords, password hashes, JWT tokens and full request bodies are deliberately not written to the logs. Logs are intended for operational monitoring and security investigation; they should be access-controlled and rotated/retained according to the deployment environment. In this development implementation, logs are stored locally in a file and are not yet sent to a central monitoring service.
+
+## Additional Security Features
+
+The system includes the following additional functional protections:
+
+1. **Temporary account lockout:** After five consecutive incorrect password attempts for an existing account, login is blocked for 15 minutes. A successful login resets the counter. Expired locks are cleared when the user next attempts to log in. The API returns HTTP `423` while an account is locked. This adds account-level protection on top of the existing IP-based authentication rate limiter.
+2. **Stronger password policy:** New registrations must use a password between 10 and 128 characters containing at least one uppercase letter, one lowercase letter, one number and one special character. Invalid passwords are rejected by registration validation before an account is created.
+
+Other existing protections include bcrypt password hashing, one-hour JWT expiry, role-based route authorisation, request input validation/sanitisation, security headers, HTTPS for local API development, and separate rate limits for authentication and booking creation.
+
 
 # References
 

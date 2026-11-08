@@ -6,6 +6,7 @@ const User = require("../models/User");
 
 // Import jsonwebtoken - generate JWTs for authenticated users
 const jwt = require("jsonwebtoken");
+const logEvent = require("../utils/logger");
 
 
 // Register a new user account (NPM, 2025) (Dave Gray, 2021) (Web Dev Simplified, 2019) (IIE, 2026)
@@ -52,6 +53,8 @@ async function register(req, res, next) {
             role
         });
 
+        logEvent("user_registered", { userId: user._id.toString(), role: user.role, ip: req.ip });
+
         // Return non-sensitive user information
         return res.status(201).json({
             success: true,
@@ -75,84 +78,93 @@ async function register(req, res, next) {
 
 // Authenticate an existing user and issue a JWT (NPM, 2025) (Dave Gray, 2021) (Web Dev Simplified, 2019) (IIE, 2026)
 async function login(req, res, next) {
-
     try {
+        const { email, password } = req.body;
+        const MAX_ATTEMPTS = 5;
+        const LOCK_TIME_MS = 15 * 60 * 1000;
 
-        // Extract the validated login details from the request body
-        const {
-            email,
-            password
-        } = req.body;
+        // Ensure the email is a string before using it in a MongoDB query
+        if (typeof email !== "string") {
+            return res.status(401).json({
+                success: false,
+                error: "AuthenticationError",
+                message: "Invalid email or password."
+            });
+        }
 
+        // Normalize the email address
+        const normalizedEmail = email.trim().toLowerCase();
 
-        // Find the user in MongoDB using their email address
-        const user = await User
-            .findOne({ email })
-            .select("+passwordHash");
+        // Find the user using the validated email string.
+        const user = await User.findOne({ email: normalizedEmail })
+            .select("+passwordHash +failedLoginAttempts +lockUntil");
 
-
-        // Check if the email does not exist
+        // Keep the response generic so attackers cannot discover registered email addresses.
         if (!user) {
+            logEvent("login_failed", { email, ip: req.ip, reason: "invalid_credentials" });
             return res.status(401).json({
-                success: false,
-                error: "AuthenticationError",
+                success: false, error: "AuthenticationError",
                 message: "Invalid email or password."
             });
         }
 
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+            logEvent("login_blocked", { userId: user._id.toString(), ip: req.ip, reason: "account_locked" });
+            return res.status(423).json({
+                success: false, error: "AccountLocked",
+                message: "This account is temporarily locked. Please try again in 15 minutes."
+            });
+        }
 
-        // Compare the entered password against the stored password hash
-        const passwordValid = await bcrypt.compare(
-            password,
-            user.passwordHash
-        );
+        // Expired locks are cleared before checking the password.
+        if (user.lockUntil && user.lockUntil <= Date.now()) {
+            user.failedLoginAttempts = 0;
+            user.lockUntil = null;
+        }
 
-
-        // Reject the login if the password does not match
+        const passwordValid = await bcrypt.compare(password, user.passwordHash);
         if (!passwordValid) {
+            user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+            if (user.failedLoginAttempts >= MAX_ATTEMPTS) {
+                user.lockUntil = new Date(Date.now() + LOCK_TIME_MS);
+            }
+            await user.save();
+            logEvent("login_failed", {
+                userId: user._id.toString(), ip: req.ip,
+                attempts: user.failedLoginAttempts,
+                locked: Boolean(user.lockUntil)
+            });
             return res.status(401).json({
-                success: false,
-                error: "AuthenticationError",
+                success: false, error: "AuthenticationError",
                 message: "Invalid email or password."
             });
         }
 
+        // Successful authentication resets the failed-attempt counter.
+        user.failedLoginAttempts = 0;
+        user.lockUntil = null;
+        await user.save();
 
-        // Generate a signed JWT containing the user's MongoDB ID and role
         const token = jwt.sign(
-            {
-                userId: user._id.toString(),
-                role: user.role
-            },
+            { userId: user._id.toString(), role: user.role },
             process.env.JWT_SECRET,
-            {
-                // Token expires after one hour
-                expiresIn: "1h"
-            }
+            { expiresIn: "1h" }
         );
 
-
-        // Return the JWT and non-sensitive user information
+        logEvent("login_success", { userId: user._id.toString(), role: user.role, ip: req.ip });
         return res.status(200).json({
             success: true,
             message: "Login successful!",
             token,
             user: {
-                id: user._id,
-                name: user.name,
-                surname: user.surname,
-                email: user.email,
-                role: user.role
+                id: user._id, name: user.name, surname: user.surname,
+                email: user.email, role: user.role
             }
         });
-
     } catch (error) {
-
-        // Pass unexpected errors to the global error handler
         next(error);
     }
 }
-
 
 // Export authentication functions so they can be used by authRoutes.js (Dave Gray, 2021) (Web Dev Simplified, 2019) (IIE, 2026)
 module.exports = {
