@@ -83,7 +83,21 @@ async function login(req, res, next) {
         const MAX_ATTEMPTS = 5;
         const LOCK_TIME_MS = 15 * 60 * 1000;
 
-        const user = await User.findOne({ email }).select("+passwordHash +failedLoginAttempts +lockUntil");
+        // Ensure the email is a string before using it in a MongoDB query
+        if (typeof email !== "string") {
+            return res.status(401).json({
+                success: false,
+                error: "AuthenticationError",
+                message: "Invalid email or password."
+            });
+        }
+
+        // Normalize the email address
+        const normalizedEmail = email.trim().toLowerCase();
+
+        // Find the user using the validated email string.
+        const user = await User.findOne({ email: normalizedEmail })
+            .select("+passwordHash +failedLoginAttempts +lockUntil");
 
         // Keep the response generic so attackers cannot discover registered email addresses.
         if (!user) {
