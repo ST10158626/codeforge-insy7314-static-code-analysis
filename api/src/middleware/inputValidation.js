@@ -86,13 +86,17 @@ function validateRegistration(req, res, next) {
     //Check that the password is text and contains at least eight characters
     if (
         typeof password !== "string" ||
-        password.length < 8 ||
-        password.length > 128
+        password.length < 10 ||
+        password.length > 128 ||
+        !/[a-z]/.test(password) ||
+        !/[A-Z]/.test(password) ||
+        !/[0-9]/.test(password) ||
+        !/[^A-Za-z0-9]/.test(password)
     ) {
         return res.status(400).json({
             success: false,
             error: "ValidationError",
-            message: "Password must contain between 8 and 128 characters."
+            message: "Password must be 10-128 characters and include uppercase, lowercase, a number and a special character."
         });
     }
 
