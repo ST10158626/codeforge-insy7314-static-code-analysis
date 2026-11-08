@@ -14,10 +14,12 @@ const bookingRoutes = require("./routes/bookingRoutes");
 const errorHandler = require("./middleware/errorHandler");
 const securityHeaders = require("./middleware/securityHeaders");
 const inputSanitization = require("./middleware/inputSanitization");
+const requestLogger = require("./middleware/requestLogger");
 
 const app = express();
 app.disable("x-powered-by");
 app.use(securityHeaders);
+app.use(requestLogger);
 app.use(cors({ origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173" }));
 app.use(express.json({ limit: "100kb" }));
 app.use(inputSanitization);
@@ -45,7 +47,7 @@ async function startServer() {
   const httpsOptions = { key: fs.readFileSync(keyPath), cert: fs.readFileSync(certPath) };
   const port = Number(process.env.PORT || 3444);
   https.createServer(httpsOptions, app).listen(port, () => {
-    console.log(`HustleHub+ API running at https://localhost:${port}`);
+    console.log(`HustleHub+ API is running at https://localhost:${port}`);
   });
 }
 
