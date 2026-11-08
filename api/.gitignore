@@ -1,4 +1,6 @@
 node_modules/
 .env
 certs/
-.env
+
+# Runtime application logs
+logs/
