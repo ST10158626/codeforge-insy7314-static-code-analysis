@@ -1,31 +1,28 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useState } from "react";
+import { AuthContext } from "./AuthContextDefinition";
 
-const AuthContext = createContext(null);
-
-// Provides authentication state to the entire application (Net Ninja, 2022) (DesiCoderPankaja, 2026) (Code With Yousaf, 2023) (OnlineITtuts Tutorials, 2025) (Traversy Media, 2022) (Medium, 2025)
+// Provides authentication state to the entire application
 export function AuthProvider({ children }) {
 
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
     // Restore the user's session when the application starts
-    useEffect(() => {
+    const [user, setUser] = useState(() => {
 
         const storedUser = localStorage.getItem("user");
         const token = localStorage.getItem("token");
 
         if (storedUser && token) {
             try {
-                setUser(JSON.parse(storedUser));
+                return JSON.parse(storedUser);
             } catch {
                 localStorage.removeItem("user");
                 localStorage.removeItem("token");
             }
         }
 
-        setLoading(false);
+        return null;
+    });
 
-    }, []);
+    const [loading] = useState(false);
 
     // Store authentication information after login
     function login(token, userData) {
@@ -61,11 +58,6 @@ export function AuthProvider({ children }) {
             {children}
         </AuthContext.Provider>
     );
-}
-
-// Custom hook used by components to access authentication state
-export function useAuth() {
-    return useContext(AuthContext);
 }
 
 /*

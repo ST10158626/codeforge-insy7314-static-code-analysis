@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Gig = require("../models/Gig");
 const Booking = require("../models/Booking");
 const Transaction = require("../models/Transaction");
+const logEvent = require("../utils/logger");
 
 // Create a booking and its simulated transaction (Net Ninja, 2022) (DesiCoderPankaja, 2026) (Code With Yousaf, 2023) (OnlineITtuts Tutorials, 2025) (Traversy Media, 2022) (Medium, 2025)
 async function createBooking(req, res, next) {
@@ -79,6 +80,21 @@ async function createBooking(req, res, next) {
             );
 
             transaction = transactionDocuments[0];
+        });
+
+        logEvent("booking_created", {
+            bookingId: booking._id.toString(),
+            transactionId: transaction._id.toString(),
+            clientId: req.user.userId,
+            freelancerId: gig.freelancerId.toString(),
+            amount: Number(gig.price)
+        });
+        logEvent("transaction_created", {
+            transactionId: transaction._id.toString(),
+            bookingId: booking._id.toString(),
+            amount: Number(gig.price),
+            status: "completed",
+            type: "simulated"
         });
 
         return res.status(201).json({
@@ -219,6 +235,7 @@ async function cancelBooking(req, res, next) {
         booking.status = "cancelled";
 
         await booking.save();
+        logEvent("booking_cancelled", { bookingId: booking._id.toString(), userId: req.user.userId });
 
         return res.status(200).json({
             success: true,
@@ -260,6 +277,7 @@ async function completeBooking(req, res, next) {
         booking.status = "completed";
 
         await booking.save();
+        logEvent("booking_completed", { bookingId: booking._id.toString(), freelancerId: req.user.userId });
 
         return res.status(200).json({
             success: true,
@@ -294,11 +312,24 @@ async function getFreelancerIncome(req, res, next) {
             0
         );
 
+        // Illustrative flat tax reserve. Configure TAX_ESTIMATE_RATE (default 0.15).
+        // This is a planning estimate, not a SARS tax assessment or tax advice.
+        const configuredRate = Number(process.env.TAX_ESTIMATE_RATE ?? 0.15);
+        const taxRate = Number.isFinite(configuredRate)
+            ? Math.min(Math.max(configuredRate, 0), 1)
+            : 0.15;
+        const estimatedTax = Number((totalIncome * taxRate).toFixed(2));
+        const afterTaxIncome = Number((totalIncome - estimatedTax).toFixed(2));
+
         return res.status(200).json({
             success: true,
-            currency: "configured-by-your-app",
+            currency: "ZAR",
             transactionCount: payableTransactions.length,
             totalIncome: Number(totalIncome.toFixed(2)),
+            taxRate,
+            estimatedTax,
+            afterTaxIncome,
+            taxMethod: "Flat-rate planning estimate: eligible completed income multiplied by TAX_ESTIMATE_RATE.",
             transactions: payableTransactions
         });
     } catch (error) {

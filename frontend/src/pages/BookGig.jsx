@@ -6,7 +6,6 @@ import {
 } from "react-router-dom";
 
 import apiRequest from "../services/api";
-import { useAuth } from "../context/AuthContext";
 
 // Book gig (Net Ninja, 2022) (DesiCoderPankaja, 2026) (Code With Yousaf, 2023) (OnlineITtuts Tutorials, 2025) (Traversy Media, 2022) (Medium, 2025)
 function BookGig() {
@@ -14,8 +13,6 @@ function BookGig() {
     const { id } = useParams();
 
     const navigate = useNavigate();
-
-    const { user } = useAuth();
 
     // Stores the selected gig
     const [gig, setGig] = useState(null);

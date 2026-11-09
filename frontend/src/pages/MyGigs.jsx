@@ -33,9 +33,35 @@ function MyGigs() {
         }
     }
 
-    useEffect(() => {
-        loadMyGigs();
-    }, []);
+useEffect(() => {
+    let ignore = false;
+
+    async function fetchMyGigs() {
+        try {
+            const data = await apiRequest("/gigs/my");
+
+            if (!ignore) {
+                setGigs(data.gigs || []);
+            }
+        } catch (err) {
+            console.error("Failed to load gigs:", err);
+
+            if (!ignore) {
+                setError(err.message || "Unable to load your gigs.");
+            }
+        } finally {
+            if (!ignore) {
+                setLoading(false);
+            }
+        }
+    }
+
+    fetchMyGigs();
+
+    return () => {
+        ignore = true;
+    };
+}, []);
 
     async function handleDeleteGig(gig) {
         const confirmed = window.confirm(
