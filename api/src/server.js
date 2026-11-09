@@ -3,6 +3,7 @@ require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
 const express = require("express");
 const https = require("https");
+const http = require("http");
 const fs = require("fs");
 const cors = require("cors");
 
@@ -42,13 +43,27 @@ async function startServer() {
   if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is missing from api/.env");
   if (!process.env.MONGODB_URI) throw new Error("MONGODB_URI is missing from api/.env");
   await connectDatabase();
-  const keyPath = path.join(__dirname, "../certs/localhost-key.pem");
-  const certPath = path.join(__dirname, "../certs/localhost.pem");
-  const httpsOptions = { key: fs.readFileSync(keyPath), cert: fs.readFileSync(certPath) };
-  const port = Number(process.env.PORT || 3444);
-  https.createServer(httpsOptions, app).listen(port, () => {
-    console.log(`HustleHub+ API is running at https://localhost:${port}`);
-  });
+    const port = Number(process.env.PORT || 3444);
+    const host = process.env.HOST || "0.0.0.0";
+    const httpsEnabled = process.env.HTTPS_ENABLED !== "false";
+
+    if (httpsEnabled) {
+        const keyPath = path.join(__dirname, "../certs/localhost-key.pem");
+        const certPath = path.join(__dirname, "../certs/localhost.pem");
+
+        const httpsOptions = {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath)
+        };
+
+        https.createServer(httpsOptions, app).listen(port, host, () => {
+            console.log(`HustleHub+ API is running at https://localhost:${port}`);
+        });
+    } else {
+        http.createServer(app).listen(port, host, () => {
+            console.log(`HustleHub+ API is running at http://localhost:${port}`);
+        });
+    }
 }
 
 if (require.main === module) {
