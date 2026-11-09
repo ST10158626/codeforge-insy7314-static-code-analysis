@@ -372,13 +372,13 @@ This folder contains the existing React/Vite frontend and Node/Express/Mongoose 
    *cd api 
    *npm ci
 4. Create an api/.env file containing the required environment variables:
-   *MONGODB_URI=your_mongodb_connection_string
-   *JWT_SECRET=your_secure_jwt_secret
-   *FRONTEND_ORIGIN=http://localhost:5173
-   *TAX_ESTIMATE_RATE=0.15
-   *PORT=3444
-   *HOST=0.0.0.0
-   *HTTPS_ENABLED=true
+   * MONGODB_URI=your_mongodb_connection_string
+   * JWT_SECRET=your_secure_jwt_secret
+   * FRONTEND_ORIGIN=http://localhost:5173
+   * TAX_ESTIMATE_RATE=0.15
+   * PORT=3444
+   * HOST=0.0.0.0
+   * HTTPS_ENABLED=true
 5. Configure the local HTTPS certificates required by the backend.
 6. Start the backend: npm start
 7. In a separate terminal, install and start the frontend:
